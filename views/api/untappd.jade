@@ -1,0 +1,37 @@
+extends ../layout
+
+block content
+  .page-header
+    h2
+      Untappd API
+
+  .btn-group.btn-group-justified
+    a.btn.btn-primary(href='https://untappd.com/api/docs', target='_blank')
+      i.fa.fa-check-square-o
+      | Documentation
+    a.btn.btn-primary(href='https://untappd.com/api/explorer', target='_blank')
+      i.fa.fa-laptop
+      | API Explorer
+  h3.text-primary User Activity Feed
+  table.table.table-bordered.table-hover
+    thead
+      tr
+        th Beer Name
+        th Brewery Name
+    tbody
+      for checkin in userActivityFeed.response.checkins.items
+        tr
+          td= checkin.beer.beer_name
+          td= checkin.brewery.brewery_name
+  br
+  h3.text-primary Beer Search
+  table.table.table-bordered.table-hover
+    thead
+      tr
+        th Beer Name
+        th Brewery Name
+    tbody
+      for beer in beerSearch.response.beers.items
+        tr
+          td= beer.beer.beer_name
+          td= beer.brewery.brewery_name

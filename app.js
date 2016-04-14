@@ -160,6 +160,7 @@ app.get('/api/upload', apiController.getFileUpload);
 app.post('/api/upload', upload.single('myFile'), apiController.postFileUpload);
 app.get('/api/pinterest', passportConfig.isAuthenticated, passportConfig.isAuthorized, apiController.getPinterest);
 app.post('/api/pinterest', passportConfig.isAuthenticated, passportConfig.isAuthorized, apiController.postPinterest);
+app.get('/api/untappd', passportConfig.isAuthenticated, passportConfig.isAuthorized, apiController.getUntappd);
 
 /**
  * OAuth authentication routes. (Sign in)
@@ -186,6 +187,10 @@ app.get('/auth/twitter/callback', passport.authenticate('twitter', { failureRedi
 });
 app.get('/auth/linkedin', passport.authenticate('linkedin', { state: 'SOME STATE' }));
 app.get('/auth/linkedin/callback', passport.authenticate('linkedin', { failureRedirect: '/login' }), function(req, res) {
+  res.redirect(req.session.returnTo || '/');
+});
+app.get('/auth/untappd', passport.authenticate('untappd'));
+app.get('/auth/untappd/callback', passport.authenticate('untappd', { failureRedirect: '/login' }), function(req, res) {
   res.redirect(req.session.returnTo || '/');
 });
 

@@ -8,6 +8,7 @@ var TwitterStrategy = require('passport-twitter').Strategy;
 var GitHubStrategy = require('passport-github').Strategy;
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 var LinkedInStrategy = require('passport-linkedin-oauth2').Strategy;
+var UntappdStrategy = require('passport-untappd').Strategy;
 var OpenIDStrategy = require('passport-openid').Strategy;
 var OAuthStrategy = require('passport-oauth').OAuthStrategy;
 var OAuth2Strategy = require('passport-oauth').OAuth2Strategy;
@@ -499,6 +500,52 @@ passport.use('pinterest', new OAuth2Strategy({
     });
   }
 ));
+
+/**
+ * Untappd API OAuth.
+ */
+passport.use(new UntappdStrategy({
+  clientID: process.env.UNTAPPD_ID,
+  clientSecret: process.env.UNTAPPD_SECRET,
+  callbackURL: '/auth/untappd/callback',
+  passReqToCallback: true
+},function(req, accessToken, refreshToken, profile, done) {
+  if (req.user) {
+    User.findOne({ untappd: profile.id }, function(err, existingUser) {
+      if (existingUser) {
+        req.flash('errors', { msg: 'There is already an Untappd account that belongs to you. Sign in with that account or delete it, then link it with your current account.' });
+        done(err);
+      } else {
+        User.findById(req.user.id, function(err, user) {
+          user.untappd = profile.id;
+          user.tokens.push({ kind: 'untappd', accessToken: accessToken });
+          user.email = user.email || profile.emails[0].value;
+          user.profile.name = user.profile.name || profile.displayName;
+          user.profile.picture = user.profile.picture || profile.photos[0].value;
+          user.save(function(err) {
+            req.flash('info', { msg: 'Untappd account has been linked.' });
+            done(err, user);
+          });
+        });
+      }
+    });
+  } else {
+    User.findOne({ untappd: profile.id }, function(err, existingUser) {
+      if (existingUser) {
+        return done(null, existingUser);
+      }
+      var user = new User();
+      user.untappd = profile.id;
+      user.tokens.push({ kind: 'untappd', accessToken: accessToken });
+      user.email = profile.emails[0].value;
+      user.profile.name = profile.displayName;
+      user.profile.picture = profile.photos[0].value;
+      user.save(function(err) {
+        done(err, user);
+      });
+    });
+  }
+}));
 
 /**
  * Login Required middleware.

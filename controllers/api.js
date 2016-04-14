@@ -360,7 +360,7 @@ exports.getSteam = function(req, res, next) {
 
   var steamId = '76561197982488301';
   var params = { l: 'english', steamid: steamId, key: process.env.STEAM_KEY };
-  
+
   async.parallel({
     playerAchievements: function(done) {
       params.appid = '49520';
@@ -924,5 +924,43 @@ exports.postPinterest = function(req, res, next) {
     }
     req.flash('success', { msg: 'Pin created' });
     res.redirect('/api/pinterest');
+  });
+};
+
+/**
+ * GET /api/untappd
+ * Untappd API example.
+ */
+exports.getUntappd = function(req, res, next) {
+  UntappdClient = require('node-untappd');
+  var untappd = new UntappdClient(false);
+
+  var token = _.find(req.user.tokens, { kind: 'untappd' });
+
+  untappd.setClientId(process.env.UNTAPPD_ID);
+  untappd.setClientSecret(process.env.UNTAPPD_SECRET);
+  untappd.setAccessToken(token.accessToken);
+
+  async.parallel({
+    userActivityFeed: function(callback) {
+      untappd.userActivityFeed(function(err, results) {
+        callback(err, results);
+      }, {});
+    },
+    beerSearch: function(callback) {
+      untappd.beerSearch(function(err, results) {
+        callback(err, results);
+      }, {q: 'pliny'});
+    }
+  },
+  function(err, results) {
+    if (err) {
+      return next(err);
+    }
+    res.render('api/untappd', {
+      title: 'Untappd API',
+      userActivityFeed: results.userActivityFeed,
+      beerSearch: results.beerSearch
+    });
   });
 };
